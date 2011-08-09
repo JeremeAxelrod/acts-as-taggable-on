@@ -65,9 +65,9 @@ module ActsAsTaggableOn
       wanted_permalink = self.name.gsub(/[^a-zA-Z0-9 ]*/, '').gsub(/ /, '_')
       self.permalink = wanted_permalink
       while conflicting_tag = Tag.find_by_permalink(self.permalink)
-        number_at_end = conflicting_tag.permalink.match(/[0-9]*$/).to_s # get the number at the end of the conflicting tag's permalink
+        number_at_end = conflicting_tag.permalink.match(/[^0-9][0-9]*$/).to_s[1..-1] # get the number at the end of the conflicting tag's permalink
         new_number = number_at_end.to_i + 1
-        self.permalink = wanted_permalink + new_number.to_s
+        self.permalink = wanted_permalink + "_" + new_number.to_s
       end
     end
 

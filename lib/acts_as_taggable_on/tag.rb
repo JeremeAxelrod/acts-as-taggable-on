@@ -3,7 +3,11 @@ module ActsAsTaggableOn
     include ActsAsTaggableOn::ActiveRecord::Backports if ::ActiveRecord::VERSION::MAJOR < 3
     include ActsAsTaggableOn::Utils
       
-    attr_accessible :name
+    attr_accessible :name, :permalink
+
+    ### BEFORE/AFTER FILTERS:
+
+    before_save :create_permalink
 
     ### ASSOCIATIONS:
 
@@ -51,6 +55,20 @@ module ActsAsTaggableOn
       created_tags  = new_tag_names.map { |name| Tag.create(:name => name) }
 
       existing_tags + created_tags
+    end
+
+    ### BEFORE/AFTER FILTER DEFINTIONS:
+
+    def create_permalink
+      # try the most obvious permalink, otherwise try to increment the permalink
+      # until we find an available value
+      wanted_permalink = self.name.gsub(/[^a-zA-Z0-9 ]*/, '').gsub(/ /, '_')
+      self.permalink = wanted_permalink
+      while conflicting_tag = Tag.find_by_permalink(self.permalink)
+        number_at_end = conflicting_tag.permalink.match(/[0-9]*$/).to_s # get the number at the end of the conflicting tag's permalink
+        new_number = number_at_end + 1
+        self.permalink = wanted_permalink + new_number.to_s
+      end
     end
 
     ### INSTANCE METHODS:
